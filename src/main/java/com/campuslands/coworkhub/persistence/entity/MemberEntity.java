@@ -4,13 +4,18 @@ import com.campuslands.coworkhub.persistence.enums.MemberStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "members")
 @Getter
+@Setter
 @NoArgsConstructor
 public class MemberEntity {
 
@@ -32,12 +37,22 @@ public class MemberEntity {
     private MemberStatus status;
 
     @CreationTimestamp
-    @Column(nullable = false, name = "created_at")
+    @Column(nullable = false, name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "membership_plan_id", nullable = false)
+    private MembershipPlanEntity membershipPlan;
+
+    @OneToOne(mappedBy = "member")
+    private UserAccountEntity userAccount;
+
+    @OneToMany(mappedBy = "member")
+    private List<BookingEntity> bookings = new ArrayList<>();
 
     public MemberEntity(String documentNumber, String fullName, String email, MemberStatus status) {
         this.documentNumber = documentNumber;

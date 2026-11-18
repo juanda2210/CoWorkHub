@@ -4,7 +4,9 @@ import com.campuslands.coworkhub.persistence.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,7 @@ import java.util.List;
 @Entity
 @Table(name = "bookings")
 @Getter
+@Setter
 @NoArgsConstructor
 public class BookingEntity {
 
@@ -21,10 +24,10 @@ public class BookingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "end_time")
     private LocalDateTime endTime;
 
     @Column(nullable = false)
@@ -53,9 +56,17 @@ public class BookingEntity {
     @Column(nullable = false, name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id", nullable = false)
+    private MemberEntity member;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "room_id", nullable = false)
+    private RoomEntity room;
 
 
     public BookingEntity(LocalDateTime startTime, LocalDateTime endTime, int attendees, BookingStatus status, BigDecimal roomCost, BigDecimal servicesCost, BigDecimal totalCost, BigDecimal cancellationFee) {

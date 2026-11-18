@@ -3,7 +3,9 @@ package com.campuslands.coworkhub.persistence.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "additional_services")
 @Getter
+@Setter
 @NoArgsConstructor
 public class AdditionalServiceEntity {
 
@@ -26,20 +29,20 @@ public class AdditionalServiceEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
-    @OneToMany(mappedBy = "additionalService")
-    private List<BookingItemEntity> bookingItems = new ArrayList<>();
 
     @CreationTimestamp
     @Column(nullable = false, name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public AdditionalServiceEntity(String name, BigDecimal unitPrice, List<BookingItemEntity> bookingItems) {
+    @OneToMany(mappedBy = "additionalService")
+    private List<BookingItemEntity> bookingItems = new ArrayList<>();
+
+    public AdditionalServiceEntity(String name, BigDecimal unitPrice) {
         this.name = name;
         this.unitPrice = unitPrice;
-        this.bookingItems = bookingItems;
     }
 }

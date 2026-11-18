@@ -3,7 +3,9 @@ package com.campuslands.coworkhub.persistence.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "booking_items")
 @Getter
+@Setter
 @NoArgsConstructor
 public class BookingItemEntity {
 
@@ -36,8 +39,7 @@ public class BookingItemEntity {
     @Column(nullable = false, name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
 
