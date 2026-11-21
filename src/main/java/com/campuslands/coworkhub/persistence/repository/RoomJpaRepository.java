@@ -21,4 +21,6 @@ public interface RoomJpaRepository extends JpaRepository<RoomEntity, Long> {
 
     boolean existsByEquipmentId(Long equipmentId);
 
+    boolean existsByLocationIdAndNameAndIdNot(Long locationId, String name, Long id);
+
 }

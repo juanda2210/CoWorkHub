@@ -7,4 +7,6 @@ public interface AdditionalServiceJpaRepository extends JpaRepository<Additional
 
     boolean existsByName(String name);
 
+    boolean existsByNameAndIdNot(String name, Long id);
+
 }
