@@ -15,6 +15,9 @@ public interface MemberJpaRepository extends JpaRepository<MemberEntity, Long> {
 
     Page<MemberEntity> findByStatus(MemberStatus status, Pageable pageable);
 
+    Page<MemberEntity> findByFullNameContainingIgnoreCaseAndStatus(
+            String name, MemberStatus status, Pageable pageable);
+
     Optional<MemberEntity> findByDocumentNumber(String documentNumber);
 
     boolean existsByDocumentNumber(String documentNumber);

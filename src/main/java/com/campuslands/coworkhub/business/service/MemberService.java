@@ -13,11 +13,11 @@ public interface MemberService {
     MemberEntity register(MemberEntity member, Long membershipPlanId,
                           String username, String password);
 
+    MemberEntity findById(Long id);
+
     MemberEntity findByDocumentNumber(String documentNumber);
 
-    Page<MemberEntity> findByName(String name, Pageable pageable);
-
-    Page<MemberEntity> findByStatus(MemberStatus status, Pageable pageable);
+    Page<MemberEntity> search(String name, MemberStatus status, Pageable pageable);
 
     MemberEntity update(Long id, MemberEntity data, Long membershipPlanId);
 

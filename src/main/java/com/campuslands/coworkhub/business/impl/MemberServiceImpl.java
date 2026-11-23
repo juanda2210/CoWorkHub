@@ -78,14 +78,24 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MemberEntity> findByName(String name, Pageable pageable) {
-        return members.findByFullNameContainingIgnoreCase(name, pageable);
+    public MemberEntity findById(Long id) {
+        return getOrThrow(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MemberEntity> findByStatus(MemberStatus status, Pageable pageable) {
-        return members.findByStatus(status, pageable);
+    public Page<MemberEntity> search(String name, MemberStatus status, Pageable pageable) {
+        boolean hasName = name != null && !name.isBlank();
+        if (hasName && status != null) {
+            return members.findByFullNameContainingIgnoreCaseAndStatus(name, status, pageable);
+        }
+        if (hasName) {
+            return members.findByFullNameContainingIgnoreCase(name, pageable);
+        }
+        if (status != null) {
+            return members.findByStatus(status, pageable);
+        }
+        return members.findAll(pageable);
     }
 
     @Override
@@ -93,16 +103,11 @@ public class MemberServiceImpl implements MemberService {
     public MemberEntity update(Long id, MemberEntity data, Long membershipPlanId) {
         MemberEntity member = getOrThrow(id);
         MembershipPlanEntity plan = getPlanOrThrow(membershipPlanId);
-        if (members.existsByDocumentNumberAndIdNot(data.getDocumentNumber(), id)) {
-            throw new ConflictException("RN-11",
-                    "Ya existe un miembro con el documento " + data.getDocumentNumber());
-        }
         if (members.existsByEmailAndIdNot(data.getEmail(), id)) {
             throw new ConflictException("RN-11",
                     "Ya existe un miembro con el email " + data.getEmail());
         }
 
-        member.setDocumentNumber(data.getDocumentNumber());
         member.setFullName(data.getFullName());
         member.setEmail(data.getEmail());
         member.setMembershipPlan(plan);

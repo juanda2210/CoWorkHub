@@ -3,13 +3,14 @@ package com.campuslands.coworkhub.presentation.exception;
 import com.campuslands.coworkhub.business.exception.ConflictException;
 import com.campuslands.coworkhub.business.exception.InvalidDataException;
 import com.campuslands.coworkhub.business.exception.NotFoundException;
-import com.campuslands.coworkhub.presentation.dto.ErrorResponse;
+import com.campuslands.coworkhub.presentation.dto.response.ErrorResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -67,6 +68,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException ex) {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
                 "Falta el parámetro obligatorio '" + ex.getParameterName() + "'");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

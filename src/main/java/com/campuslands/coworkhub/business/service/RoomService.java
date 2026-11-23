@@ -17,7 +17,7 @@ public interface RoomService {
 
     Page<RoomEntity> findAll(Pageable pageable);
 
-    List<RoomEntity> findByLocation(Long locationId);
+    Page<RoomEntity> findByLocation(Long locationId, Pageable pageable);
 
     RoomEntity update(Long id, RoomEntity data, Set<Long> equipmentIds);
 

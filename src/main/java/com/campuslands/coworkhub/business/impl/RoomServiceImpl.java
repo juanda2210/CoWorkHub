@@ -70,8 +70,8 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RoomEntity> findByLocation(Long locationId) {
-        return rooms.findByLocationId(locationId);
+    public Page<RoomEntity> findByLocation(Long locationId, Pageable pageable) {
+        return rooms.findByLocationId(locationId, pageable);
     }
 
     @Override
