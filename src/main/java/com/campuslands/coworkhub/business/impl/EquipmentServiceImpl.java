@@ -1,7 +1,8 @@
 package com.campuslands.coworkhub.business.impl;
 
+import com.campuslands.coworkhub.business.exception.ConflictException;
+import com.campuslands.coworkhub.business.exception.NotFoundException;
 import com.campuslands.coworkhub.business.service.EquipmentService;
-import com.campuslands.coworkhub.business.serviceResult.EquipmentServiceResult;
 import com.campuslands.coworkhub.persistence.entity.EquipmentEntity;
 import com.campuslands.coworkhub.persistence.repository.EquipmentJpaRepository;
 import com.campuslands.coworkhub.persistence.repository.RoomJpaRepository;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -22,17 +21,18 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     @Transactional
-    public EquipmentServiceResult<EquipmentEntity> create(EquipmentEntity data) {
+    public EquipmentEntity create(EquipmentEntity data) {
         if (equipment.existsByName(data.getName())) {
-            return EquipmentServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un equipamiento con el nombre " + data.getName());
         }
-        return EquipmentServiceResult.ok(equipment.save(data));
+        return equipment.save(data);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<EquipmentEntity> findById(Long id) {
-        return equipment.findById(id);
+    public EquipmentEntity findById(Long id) {
+        return getOrThrow(id);
     }
 
     @Override
@@ -43,32 +43,32 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     @Transactional
-    public EquipmentServiceResult<EquipmentEntity> update(Long id, EquipmentEntity data) {
-        Optional<EquipmentEntity> current = equipment.findById(id);
-        if (current.isEmpty()) {
-            return EquipmentServiceResult.notFound();
-        }
+    public EquipmentEntity update(Long id, EquipmentEntity data) {
+        EquipmentEntity item = getOrThrow(id);
         if (equipment.existsByNameAndIdNot(data.getName(), id)) {
-            return EquipmentServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un equipamiento con el nombre " + data.getName());
         }
 
-        EquipmentEntity item = current.get();
         item.setName(data.getName());
         item.setQuantity(data.getQuantity());
-        return EquipmentServiceResult.ok(item);
+        return item;
     }
 
     @Override
     @Transactional
-    public EquipmentServiceResult<Void> delete(Long id) {
-        Optional<EquipmentEntity> current = equipment.findById(id);
-        if (current.isEmpty()) {
-            return EquipmentServiceResult.notFound();
-        }
+    public void delete(Long id) {
+        EquipmentEntity item = getOrThrow(id);
         if (rooms.existsByEquipmentId(id)) {
-            return EquipmentServiceResult.inUse();
+            throw new ConflictException("RN-12",
+                    "El equipamiento está en uso en salas y no se puede eliminar");
         }
-        equipment.delete(current.get());
-        return EquipmentServiceResult.ok(null);
+        equipment.delete(item);
+    }
+
+    private EquipmentEntity getOrThrow(Long id) {
+        return equipment.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "El equipamiento con id " + id + " no existe"));
     }
 }

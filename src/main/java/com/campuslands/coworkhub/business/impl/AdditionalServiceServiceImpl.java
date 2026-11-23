@@ -1,7 +1,8 @@
 package com.campuslands.coworkhub.business.impl;
 
+import com.campuslands.coworkhub.business.exception.ConflictException;
+import com.campuslands.coworkhub.business.exception.NotFoundException;
 import com.campuslands.coworkhub.business.service.AdditionalServiceService;
-import com.campuslands.coworkhub.business.serviceResult.AdditionalServiceServiceResult;
 import com.campuslands.coworkhub.persistence.entity.AdditionalServiceEntity;
 import com.campuslands.coworkhub.persistence.repository.AdditionalServiceJpaRepository;
 import com.campuslands.coworkhub.persistence.repository.BookingJpaRepository;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -22,17 +21,18 @@ public class AdditionalServiceServiceImpl implements AdditionalServiceService {
 
     @Override
     @Transactional
-    public AdditionalServiceServiceResult<AdditionalServiceEntity> create(AdditionalServiceEntity data) {
+    public AdditionalServiceEntity create(AdditionalServiceEntity data) {
         if (additionalServices.existsByName(data.getName())) {
-            return AdditionalServiceServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un servicio adicional con el nombre " + data.getName());
         }
-        return AdditionalServiceServiceResult.ok(additionalServices.save(data));
+        return additionalServices.save(data);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AdditionalServiceEntity> findById(Long id) {
-        return additionalServices.findById(id);
+    public AdditionalServiceEntity findById(Long id) {
+        return getOrThrow(id);
     }
 
     @Override
@@ -43,32 +43,32 @@ public class AdditionalServiceServiceImpl implements AdditionalServiceService {
 
     @Override
     @Transactional
-    public AdditionalServiceServiceResult<AdditionalServiceEntity> update(Long id, AdditionalServiceEntity data) {
-        Optional<AdditionalServiceEntity> current = additionalServices.findById(id);
-        if (current.isEmpty()) {
-            return AdditionalServiceServiceResult.notFound();
-        }
+    public AdditionalServiceEntity update(Long id, AdditionalServiceEntity data) {
+        AdditionalServiceEntity service = getOrThrow(id);
         if (additionalServices.existsByNameAndIdNot(data.getName(), id)) {
-            return AdditionalServiceServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un servicio adicional con el nombre " + data.getName());
         }
 
-        AdditionalServiceEntity service = current.get();
         service.setName(data.getName());
         service.setUnitPrice(data.getUnitPrice());
-        return AdditionalServiceServiceResult.ok(service);
+        return service;
     }
 
     @Override
     @Transactional
-    public AdditionalServiceServiceResult<Void> delete(Long id) {
-        Optional<AdditionalServiceEntity> current = additionalServices.findById(id);
-        if (current.isEmpty()) {
-            return AdditionalServiceServiceResult.notFound();
-        }
+    public void delete(Long id) {
+        AdditionalServiceEntity service = getOrThrow(id);
         if (bookings.existsByItemsAdditionalServiceId(id)) {
-            return AdditionalServiceServiceResult.inUse();
+            throw new ConflictException("RN-12",
+                    "El servicio adicional está en uso en reservas y no se puede eliminar");
         }
-        additionalServices.delete(current.get());
-        return AdditionalServiceServiceResult.ok(null);
+        additionalServices.delete(service);
+    }
+
+    private AdditionalServiceEntity getOrThrow(Long id) {
+        return additionalServices.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "El servicio adicional con id " + id + " no existe"));
     }
 }

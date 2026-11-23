@@ -1,9 +1,10 @@
 package com.campuslands.coworkhub.business.impl;
 
 import com.campuslands.coworkhub.business.component.MonthlyUsageCalculator;
+import com.campuslands.coworkhub.business.exception.ConflictException;
+import com.campuslands.coworkhub.business.exception.NotFoundException;
 import com.campuslands.coworkhub.business.model.MonthlyConsumption;
 import com.campuslands.coworkhub.business.service.MemberService;
-import com.campuslands.coworkhub.business.serviceResult.MemberServiceResult;
 import com.campuslands.coworkhub.persistence.entity.MemberEntity;
 import com.campuslands.coworkhub.persistence.entity.MembershipPlanEntity;
 import com.campuslands.coworkhub.persistence.entity.UserAccountEntity;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -38,23 +38,23 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public MemberServiceResult<MemberEntity> register(MemberEntity data, Long membershipPlanId,
-                                                      String username, String password) {
-        Optional<MembershipPlanEntity> plan = plans.findById(membershipPlanId);
-        if (plan.isEmpty()) {
-            return MemberServiceResult.planNotFound();
-        }
+    public MemberEntity register(MemberEntity data, Long membershipPlanId,
+                                 String username, String password) {
+        MembershipPlanEntity plan = getPlanOrThrow(membershipPlanId);
         if (members.existsByDocumentNumber(data.getDocumentNumber())) {
-            return MemberServiceResult.documentTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un miembro con el documento " + data.getDocumentNumber());
         }
         if (members.existsByEmail(data.getEmail())) {
-            return MemberServiceResult.emailTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un miembro con el email " + data.getEmail());
         }
         if (accounts.existsByUsername(username)) {
-            return MemberServiceResult.usernameTaken();
+            throw new ConflictException("RN-11",
+                    "El nombre de usuario " + username + " ya está en uso");
         }
 
-        data.setMembershipPlan(plan.get());
+        data.setMembershipPlan(plan);
         data.setStatus(MemberStatus.ACTIVE);
         MemberEntity savedMember = members.save(data);
 
@@ -64,14 +64,16 @@ public class MemberServiceImpl implements MemberService {
         accounts.save(account);
         savedMember.setUserAccount(account);
 
-        return MemberServiceResult.ok(savedMember);
+        return savedMember;
     }
 
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<MemberEntity> findByDocumentNumber(String documentNumber) {
-        return members.findByDocumentNumber(documentNumber);
+    public MemberEntity findByDocumentNumber(String documentNumber) {
+        return members.findByDocumentNumber(documentNumber)
+                .orElseThrow(() -> new NotFoundException(
+                        "El miembro con documento " + documentNumber + " no existe"));
     }
 
     @Override
@@ -88,72 +90,68 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public MemberServiceResult<MemberEntity> update(Long id, MemberEntity data, Long membershipPlanId) {
-        Optional<MemberEntity> current = members.findById(id);
-        if (current.isEmpty()) {
-            return MemberServiceResult.notFound();
-        }
-        Optional<MembershipPlanEntity> plan = plans.findById(membershipPlanId);
-        if (plan.isEmpty()) {
-            return MemberServiceResult.planNotFound();
-        }
+    public MemberEntity update(Long id, MemberEntity data, Long membershipPlanId) {
+        MemberEntity member = getOrThrow(id);
+        MembershipPlanEntity plan = getPlanOrThrow(membershipPlanId);
         if (members.existsByDocumentNumberAndIdNot(data.getDocumentNumber(), id)) {
-            return MemberServiceResult.documentTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un miembro con el documento " + data.getDocumentNumber());
         }
         if (members.existsByEmailAndIdNot(data.getEmail(), id)) {
-            return MemberServiceResult.emailTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un miembro con el email " + data.getEmail());
         }
 
-        MemberEntity member = current.get();
         member.setDocumentNumber(data.getDocumentNumber());
         member.setFullName(data.getFullName());
         member.setEmail(data.getEmail());
-        member.setMembershipPlan(plan.get());
-        return MemberServiceResult.ok(member);
+        member.setMembershipPlan(plan);
+        return member;
     }
 
     @Override
     @Transactional
-    public MemberServiceResult<MemberEntity> changeStatus(Long id, MemberStatus status) {
-        Optional<MemberEntity> current = members.findById(id);
-        if (current.isEmpty()) {
-            return MemberServiceResult.notFound();
-        }
-        MemberEntity member = current.get();
+    public MemberEntity changeStatus(Long id, MemberStatus status) {
+        MemberEntity member = getOrThrow(id);
         member.setStatus(status);
-        return MemberServiceResult.ok(member);
+        return member;
     }
 
     @Override
     @Transactional
-    public MemberServiceResult<Void> delete(Long id) {
-        Optional<MemberEntity> current = members.findById(id);
-        if (current.isEmpty()) {
-            return MemberServiceResult.notFound();
-        }
+    public void delete(Long id) {
+        MemberEntity member = getOrThrow(id);
         if (bookings.existsByMemberId(id)) {
-            return MemberServiceResult.hasBookings();
+            throw new ConflictException("RN-12",
+                    "El miembro tiene reservas y no se puede eliminar");
         }
         accounts.findByMemberId(id).ifPresent(accounts::delete);
-        members.delete(current.get());
-        return MemberServiceResult.ok(null);
+        members.delete(member);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MemberServiceResult<MonthlyConsumption> getMonthlyConsumption(Long memberId, YearMonth month) {
-        Optional<MemberEntity> current = members.findById(memberId);
-        if (current.isEmpty()) {
-            return MemberServiceResult.notFound();
-        }
+    public MonthlyConsumption getMonthlyConsumption(Long memberId, YearMonth month) {
+        MemberEntity member = getOrThrow(memberId);
 
         BigDecimal includedHours = BigDecimal.valueOf(
-                current.get().getMembershipPlan().getIncludedHoursPerMonth());
+                member.getMembershipPlan().getIncludedHoursPerMonth());
         BigDecimal usedHours = usage.usedHours(memberId, month);
         BigDecimal remainingHours = includedHours.subtract(usedHours).max(BigDecimal.ZERO);
         BigDecimal overageHours = usedHours.subtract(includedHours).max(BigDecimal.ZERO);
 
-        return MemberServiceResult.ok(
-                new MonthlyConsumption(includedHours, usedHours, remainingHours, overageHours));
+        return new MonthlyConsumption(includedHours, usedHours, remainingHours, overageHours);
+    }
+
+    private MemberEntity getOrThrow(Long id) {
+        return members.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "El miembro con id " + id + " no existe"));
+    }
+
+    private MembershipPlanEntity getPlanOrThrow(Long planId) {
+        return plans.findById(planId)
+                .orElseThrow(() -> new NotFoundException(
+                        "El plan de membresía con id " + planId + " no existe"));
     }
 }

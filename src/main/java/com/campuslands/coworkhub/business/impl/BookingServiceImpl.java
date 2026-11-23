@@ -1,8 +1,9 @@
 package com.campuslands.coworkhub.business.impl;
 
 import com.campuslands.coworkhub.business.component.MonthlyUsageCalculator;
+import com.campuslands.coworkhub.business.exception.ConflictException;
+import com.campuslands.coworkhub.business.exception.NotFoundException;
 import com.campuslands.coworkhub.business.service.BookingService;
-import com.campuslands.coworkhub.business.serviceResult.BookingServiceResult;
 import com.campuslands.coworkhub.persistence.entity.*;
 import com.campuslands.coworkhub.persistence.enums.BookingStatus;
 import com.campuslands.coworkhub.persistence.enums.MemberStatus;
@@ -41,53 +42,56 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> create(Long memberId, Long roomId,
-                                                      LocalDateTime startTime, LocalDateTime endTime,
-                                                      int attendees, Map<Long, Integer> services) {
-        Optional<MemberEntity> memberOpt = members.findById(memberId);
-        if (memberOpt.isEmpty()) {
-            return BookingServiceResult.memberNotFound();
-        }
-        MemberEntity member = memberOpt.get();
+    public BookingEntity create(Long memberId, Long roomId,
+                                LocalDateTime startTime, LocalDateTime endTime,
+                                int attendees, Map<Long, Integer> services) {
+        MemberEntity member = members.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(
+                        "El miembro con id " + memberId + " no existe"));
         if (member.getStatus() != MemberStatus.ACTIVE) {
-            return BookingServiceResult.memberNotActive();
+            throw new ConflictException("RN-05",
+                    "El miembro no está activo y no puede reservar");
         }
 
         long minutes = Duration.between(startTime, endTime).toMinutes();
         boolean sameDay = startTime.toLocalDate().equals(endTime.toLocalDate());
         if (!sameDay || minutes < 30 || minutes > 480 || minutes % 30 != 0) {
-            return BookingServiceResult.invalidDuration();
+            throw new ConflictException("RN-02",
+                    "La reserva debe durar entre 30 minutos y 8 horas, en múltiplos de 30 minutos, "
+                            + "y empezar y terminar el mismo día");
         }
 
         LocalDateTime now = LocalDateTime.now(clock);
         if (startTime.isBefore(now.plusHours(1))) {
-            return BookingServiceResult.tooSoon();
+            throw new ConflictException("RN-03",
+                    "La reserva debe ser futura y hacerse con al menos 1 hora de anticipación");
         }
 
-        Optional<RoomEntity> roomOpt = rooms.findWithLockById(roomId);
-        if (roomOpt.isEmpty()) {
-            return BookingServiceResult.roomNotFound();
-        }
-        RoomEntity room = roomOpt.get();
+        RoomEntity room = rooms.findWithLockById(roomId)
+                .orElseThrow(() -> new NotFoundException(
+                        "La sala con id " + roomId + " no existe"));
 
         if (!room.isActive()) {
-            return BookingServiceResult.roomInactive();
+            throw new ConflictException("RN-04", "La sala no está activa");
         }
 
         if (attendees > room.getCapacity()) {
-            return BookingServiceResult.capacityExceeded();
+            throw new ConflictException("RN-04",
+                    "Los asistentes superan la capacidad de la sala (" + room.getCapacity() + ")");
         }
         LocationEntity location = room.getLocation();
 
         if (startTime.toLocalTime().isBefore(location.getOpeningTime())
                 || endTime.toLocalTime().isAfter(location.getClosingTime())) {
-            return BookingServiceResult.outsideOpeningHours();
+            throw new ConflictException("RN-03",
+                    "La reserva queda fuera del horario de la sede");
         }
 
         long activeBookings = bookings.countByMemberIdAndStatusInAndStartTimeAfter(
                 memberId, ACTIVE_STATUSES, now);
         if (activeBookings >= member.getMembershipPlan().getMaxActiveBookings()) {
-            return BookingServiceResult.bookingLimitReached();
+            throw new ConflictException("RN-06",
+                    "El miembro alcanzó el máximo de reservas activas de su plan");
         }
 
         boolean overlaps = bookings
@@ -95,17 +99,17 @@ public class BookingServiceImpl implements BookingService {
                 .stream()
                 .anyMatch(b -> ACTIVE_STATUSES.contains(b.getStatus()));
         if (overlaps) {
-            return BookingServiceResult.roomNotAvailable();
+            throw new ConflictException("RN-01",
+                    "La sala ya está reservada en ese horario");
         }
 
         List<BookingItemEntity> items = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : services.entrySet()) {
-            Optional<AdditionalServiceEntity> service = additionalServices.findById(entry.getKey());
-            if (service.isEmpty()) {
-                return BookingServiceResult.serviceNotFound();
-            }
+            AdditionalServiceEntity service = additionalServices.findById(entry.getKey())
+                    .orElseThrow(() -> new NotFoundException(
+                            "El servicio adicional con id " + entry.getKey() + " no existe"));
             items.add(new BookingItemEntity(
-                    entry.getValue(), service.get().getUnitPrice(), null, service.get()));
+                    entry.getValue(), service.getUnitPrice(), null, service));
         }
 
         BigDecimal roomCost = calculateRoomCost(member, room, startTime, endTime);
@@ -120,13 +124,13 @@ public class BookingServiceImpl implements BookingService {
             booking.getItems().add(item);
         }
 
-        return BookingServiceResult.ok(bookings.save(booking));
+        return bookings.save(booking);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<BookingEntity> findById(Long id) {
-        return bookings.findById(id);
+    public BookingEntity findById(Long id) {
+        return getOrThrow(id);
     }
 
     @Override
@@ -150,19 +154,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> addService(Long bookingId, Long serviceId, int quantity) {
-        Optional<BookingEntity> current = bookings.findById(bookingId);
-        if (current.isEmpty()) {
-            return BookingServiceResult.notFound();
-        }
-        BookingEntity booking = current.get();
+    public BookingEntity addService(Long bookingId, Long serviceId, int quantity) {
+        BookingEntity booking = getOrThrow(bookingId);
         if (booking.getStatus() != BookingStatus.PENDING) {
-            return BookingServiceResult.notPending();
+            throw new ConflictException("RN-10",
+                    "Los servicios solo se pueden cambiar mientras la reserva está PENDING");
         }
-        Optional<AdditionalServiceEntity> service = additionalServices.findById(serviceId);
-        if (service.isEmpty()) {
-            return BookingServiceResult.serviceNotFound();
-        }
+        AdditionalServiceEntity service = additionalServices.findById(serviceId)
+                .orElseThrow(() -> new NotFoundException(
+                        "El servicio adicional con id " + serviceId + " no existe"));
 
         Optional<BookingItemEntity> existing = findItem(booking, serviceId);
         if (existing.isPresent()) {
@@ -170,64 +170,55 @@ public class BookingServiceImpl implements BookingService {
             item.setQuantity(item.getQuantity() + quantity);
         } else {
             booking.getItems().add(new BookingItemEntity(
-                    quantity, service.get().getUnitPrice(), booking, service.get()));
+                    quantity, service.getUnitPrice(), booking, service));
         }
 
         recalculateCosts(booking);
-        return BookingServiceResult.ok(booking);
+        return booking;
     }
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> removeService(Long bookingId, Long serviceId) {
-        Optional<BookingEntity> current = bookings.findById(bookingId);
-        if (current.isEmpty()) {
-            return BookingServiceResult.notFound();
-        }
-        BookingEntity booking = current.get();
+    public BookingEntity removeService(Long bookingId, Long serviceId) {
+        BookingEntity booking = getOrThrow(bookingId);
         if (booking.getStatus() != BookingStatus.PENDING) {
-            return BookingServiceResult.notPending();
+            throw new ConflictException("RN-10",
+                    "Los servicios solo se pueden cambiar mientras la reserva está PENDING");
         }
-        Optional<BookingItemEntity> item = findItem(booking, serviceId);
-        if (item.isEmpty()) {
-            return BookingServiceResult.serviceNotInBooking();
-        }
+        BookingItemEntity item = findItem(booking, serviceId)
+                .orElseThrow(() -> new NotFoundException(
+                        "La reserva no tiene el servicio adicional con id " + serviceId));
 
-        booking.getItems().remove(item.get());
+        booking.getItems().remove(item);
         recalculateCosts(booking);
-        return BookingServiceResult.ok(booking);
+        return booking;
     }
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> confirm(Long id) {
-        Optional<BookingEntity> current = bookings.findById(id);
-        if (current.isEmpty()) {
-            return BookingServiceResult.notFound();
-        }
-        BookingEntity booking = current.get();
+    public BookingEntity confirm(Long id) {
+        BookingEntity booking = getOrThrow(id);
         if (booking.getStatus() != BookingStatus.PENDING) {
-            return BookingServiceResult.invalidTransition();
+            throw new ConflictException("RN-09",
+                    "No se puede confirmar una reserva en estado " + booking.getStatus());
         }
         booking.setStatus(BookingStatus.CONFIRMED);
-        return BookingServiceResult.ok(booking);
+        return booking;
     }
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> cancel(Long id) {
-        Optional<BookingEntity> current = bookings.findById(id);
-        if (current.isEmpty()) {
-            return BookingServiceResult.notFound();
-        }
-        BookingEntity booking = current.get();
+    public BookingEntity cancel(Long id) {
+        BookingEntity booking = getOrThrow(id);
         if (!ACTIVE_STATUSES.contains(booking.getStatus())) {
-            return BookingServiceResult.invalidTransition();
+            throw new ConflictException("RN-09",
+                    "No se puede cancelar una reserva en estado " + booking.getStatus());
         }
 
         LocalDateTime now = LocalDateTime.now(clock);
         if (now.isAfter(booking.getStartTime().minusHours(2))) {
-            return BookingServiceResult.cancellationNotAllowed();
+            throw new ConflictException("RN-08",
+                    "No se puede cancelar con menos de 2 horas de anticipación o si la reserva ya empezó");
         }
 
         BigDecimal fee = BigDecimal.ZERO;
@@ -239,25 +230,28 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationFee(fee);
-        return BookingServiceResult.ok(booking);
+        return booking;
     }
 
     @Override
     @Transactional
-    public BookingServiceResult<BookingEntity> complete(Long id) {
-        Optional<BookingEntity> current = bookings.findById(id);
-        if (current.isEmpty()) {
-            return BookingServiceResult.notFound();
-        }
-        BookingEntity booking = current.get();
+    public BookingEntity complete(Long id) {
+        BookingEntity booking = getOrThrow(id);
         if (booking.getStatus() != BookingStatus.CONFIRMED) {
-            return BookingServiceResult.invalidTransition();
+            throw new ConflictException("RN-09",
+                    "No se puede completar una reserva en estado " + booking.getStatus());
         }
         booking.setStatus(BookingStatus.COMPLETED);
-        return BookingServiceResult.ok(booking);
+        return booking;
     }
 
     // ---------- métodos privados de apoyo ----------
+
+    private BookingEntity getOrThrow(Long id) {
+        return bookings.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "La reserva con id " + id + " no existe"));
+    }
 
     private Optional<BookingItemEntity> findItem(BookingEntity booking, Long serviceId) {
         return booking.getItems().stream()

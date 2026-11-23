@@ -1,7 +1,8 @@
 package com.campuslands.coworkhub.business.impl;
 
+import com.campuslands.coworkhub.business.exception.ConflictException;
+import com.campuslands.coworkhub.business.exception.NotFoundException;
 import com.campuslands.coworkhub.business.service.MembershipPlanService;
-import com.campuslands.coworkhub.business.serviceResult.MembershipPlanServiceResult;
 import com.campuslands.coworkhub.persistence.entity.MembershipPlanEntity;
 import com.campuslands.coworkhub.persistence.repository.MemberJpaRepository;
 import com.campuslands.coworkhub.persistence.repository.MembershipPlanJpaRepository;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -22,17 +21,18 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
     @Override
     @Transactional
-    public MembershipPlanServiceResult<MembershipPlanEntity> create(MembershipPlanEntity data) {
+    public MembershipPlanEntity create(MembershipPlanEntity data) {
         if (plans.existsByName(data.getName())) {
-            return MembershipPlanServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un plan de membresía con el nombre " + data.getName());
         }
-        return MembershipPlanServiceResult.ok(plans.save(data));
+        return plans.save(data);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<MembershipPlanEntity> findById(Long id) {
-        return plans.findById(id);
+    public MembershipPlanEntity findById(Long id) {
+        return getOrThrow(id);
     }
 
     @Override
@@ -43,34 +43,34 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
     @Override
     @Transactional
-    public MembershipPlanServiceResult<MembershipPlanEntity> update(Long id, MembershipPlanEntity data) {
-        Optional<MembershipPlanEntity> current = plans.findById(id);
-        if (current.isEmpty()) {
-            return MembershipPlanServiceResult.notFound();
-        }
+    public MembershipPlanEntity update(Long id, MembershipPlanEntity data) {
+        MembershipPlanEntity plan = getOrThrow(id);
         if (plans.existsByNameAndIdNot(data.getName(), id)) {
-            return MembershipPlanServiceResult.nameTaken();
+            throw new ConflictException("RN-11",
+                    "Ya existe un plan de membresía con el nombre " + data.getName());
         }
 
-        MembershipPlanEntity plan = current.get();
         plan.setName(data.getName());
         plan.setIncludedHoursPerMonth(data.getIncludedHoursPerMonth());
         plan.setOverageDiscount(data.getOverageDiscount());
         plan.setMaxActiveBookings(data.getMaxActiveBookings());
-        return MembershipPlanServiceResult.ok(plan);
+        return plan;
     }
 
     @Override
     @Transactional
-    public MembershipPlanServiceResult<Void> delete(Long id) {
-        Optional<MembershipPlanEntity> current = plans.findById(id);
-        if (current.isEmpty()) {
-            return MembershipPlanServiceResult.notFound();
-        }
+    public void delete(Long id) {
+        MembershipPlanEntity plan = getOrThrow(id);
         if (members.existsByMembershipPlanId(id)) {
-            return MembershipPlanServiceResult.inUse();
+            throw new ConflictException("RN-12",
+                    "El plan de membresía tiene miembros asociados y no se puede eliminar");
         }
-        plans.delete(current.get());
-        return MembershipPlanServiceResult.ok(null);
+        plans.delete(plan);
+    }
+
+    private MembershipPlanEntity getOrThrow(Long id) {
+        return plans.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "El plan de membresía con id " + id + " no existe"));
     }
 }
