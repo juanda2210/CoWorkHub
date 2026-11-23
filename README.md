@@ -272,3 +272,59 @@ htpasswd -bnBC 10 "" 'LaNuevaContraseña' | tr -d ':\n' | sed 's/^\$2y/$2a/'
 
 Copia el resultado (empieza por `$2a$10$` y tiene 60 caracteres, sin el `%` que a veces muestra la terminal al final),
 reemplaza el hash del usuario correspondiente en `import.sql` y reinicia la aplicación.
+
+## 12. Conectar un front (CORS)
+
+La API acepta peticiones de un navegador **solo si vienen de tu propio computador**: `http://localhost:<puerto>` o
+`http://127.0.0.1:<puerto>`, con cualquier puerto. Cualquier otro origen recibe `403 Invalid CORS request`. La
+configuración está en `SecurityConfig` (`corsConfigurationSource`).
+
+| Permitido | Valor |
+|---|---|
+| Orígenes | `http://localhost:*` y `http://127.0.0.1:*` |
+| Métodos | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` |
+| Cabeceras | `Authorization`, `Content-Type` |
+| Cabecera legible por el front | `Location` (URL del recurso recién creado) |
+
+**Cómo abrir un front de prueba (HTML, CSS y JS):** sírvelo con un servidor local, por ejemplo con la extensión
+Live Server de VS Code, o desde la carpeta del front:
+
+```bash
+python3 -m http.server 5500
+```
+
+y entra a `http://localhost:5500`. No lo abras con doble clic sobre el `index.html` (dirección `file://`): el
+navegador envía entonces el origen `null`, que la API no acepta.
+
+`localhost` y `127.0.0.1` cuentan como orígenes distintos; usa en el navegador el mismo que tengas configurado.
+
+**Cómo consumir la API desde el front:**
+
+1. `POST /auth/login` con `{"username": "...", "password": "..."}` y guardar el `token` de la respuesta.
+2. Enviar `Authorization: Bearer <token>` en las demás peticiones. El token vence a los 60 minutos y no hay
+   renovación: pasado ese tiempo hay que iniciar sesión de nuevo.
+3. Leer `error` y `codigo` del cuerpo cuando la respuesta no sea exitosa (ver la sección de errores).
+
+```javascript
+const login = await fetch("http://localhost:8080/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username: "ana", password: "Member1" })
+});
+const { token } = await login.json();
+
+const sedes = await fetch("http://localhost:8080/api/sedes", {
+  headers: { "Authorization": "Bearer " + token }
+});
+const pagina = await sedes.json(); // { content: [...], page, size, totalElements, totalPages }
+```
+
+Detalles a tener en cuenta:
+
+- Los listados vienen **paginados** (20 elementos por defecto): usa `?page=` y `?size=` (por ejemplo `?size=100`
+  para llenar un selector).
+- Las fechas de las reservas no llevan zona horaria: se envían como `2030-06-03T10:00:00`, en la hora local de la sede.
+- `GET /api/reservas` exige un filtro: `miembroId`, `salaId` junto con `fecha`, o `estado`.
+- Los permisos siguen aplicando: un `MEMBER` solo accede a lo suyo y recibe `403` en el resto.
+- La configuración de CORS está pensada para **desarrollo local**. Para desplegar la API en otro lugar, hay que
+  cambiar los orígenes permitidos por la dirección real del front.
