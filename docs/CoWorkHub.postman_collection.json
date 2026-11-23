@@ -1,0 +1,1583 @@
+{
+  "info": {
+    "_postman_id": "7e82b038-17ee-48a2-b3e3-d25752f9d9b7",
+    "name": "CoWorkHub - Escenarios de aceptación",
+    "description": "Los 14 escenarios de aceptación del README, con pruebas automáticas.\n\nAntes de ejecutar: la aplicación y MySQL deben estar corriendo y la base debe estar recién cargada desde import.sql (se recrea al arrancar). Las carpetas se ejecutan en orden: la 00 inicia sesión y guarda los tokens.\n\nLas contraseñas se pasan al ejecutar (variables adminPassword, recepPassword, anaPassword y carlosPassword); no se guardan en el archivo.\n\nLos escenarios 06 y 07 dependen de la hora a la que se ejecuten; si no hay una ventana válida, la prueba lo indica como OMITIDO.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Autenticación (ejecutar primero)",
+      "item": [
+        {
+          "name": "Login de admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"admin\", \"password\": \"{{adminPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El login responde 200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('devuelve un token Bearer', () => { pm.expect(b.token).to.be.a('string'); pm.expect(b.tokenType).to.eql('Bearer'); });",
+                  "pm.test('el token vence en 3600 segundos (60 minutos)', () => pm.expect(b.expiresIn).to.eql(3600));",
+                  "if (b.token) { pm.collectionVariables.set('adminToken', b.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login de recep",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"recep\", \"password\": \"{{recepPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El login responde 200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('devuelve un token Bearer', () => { pm.expect(b.token).to.be.a('string'); pm.expect(b.tokenType).to.eql('Bearer'); });",
+                  "pm.test('el token vence en 3600 segundos (60 minutos)', () => pm.expect(b.expiresIn).to.eql(3600));",
+                  "if (b.token) { pm.collectionVariables.set('recepToken', b.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login de ana",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"ana\", \"password\": \"{{anaPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El login responde 200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('devuelve un token Bearer', () => { pm.expect(b.token).to.be.a('string'); pm.expect(b.tokenType).to.eql('Bearer'); });",
+                  "pm.test('el token vence en 3600 segundos (60 minutos)', () => pm.expect(b.expiresIn).to.eql(3600));",
+                  "if (b.token) { pm.collectionVariables.set('anaToken', b.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login de carlos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"carlos\", \"password\": \"{{carlosPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El login responde 200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('devuelve un token Bearer', () => { pm.expect(b.token).to.be.a('string'); pm.expect(b.tokenType).to.eql('Bearer'); });",
+                  "pm.test('el token vence en 3600 segundos (60 minutos)', () => pm.expect(b.expiresIn).to.eql(3600));",
+                  "if (b.token) { pm.collectionVariables.set('carlosToken', b.token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Inicia sesión con los cuatro usuarios de prueba y guarda sus tokens en variables de la colección."
+    },
+    {
+      "name": "Escenario 01 - Reservar una sala libre con 2 servicios",
+      "item": [
+        {
+          "name": "Crear la reserva (recepción, a nombre de Laura)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 1, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 4, \"services\": [{\"serviceId\": 1, \"quantity\": 2}, {\"serviceId\": 2, \"quantity\": 1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(20, 10, 0)));",
+                  "pm.variables.set('end', iso(at(20, 11, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+                  "",
+                  "pm.test('el costo de los servicios es 29000 (2 x 12000 + 1 x 5000)', () => pm.expect(b.servicesCost).to.eql(29000));",
+                  "pm.test('totalCost = roomCost + servicesCost', () => pm.expect(b.totalCost).to.be.closeTo(b.roomCost + b.servicesCost, 0.01));",
+                  "pm.test('trae los 2 servicios con su precio aplicado', () => pm.expect(b.items.length).to.eql(2));",
+                  "pm.test('trae el encabezado Location', () => pm.response.to.have.header('Location'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 02 - Reserva que se cruza con otra (RN-01)",
+      "item": [
+        {
+          "name": "2a. Reserva base 10:00-12:00 (sala 2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 2, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(21, 10, 0)));",
+                  "pm.variables.set('end', iso(at(21, 12, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2b. Reserva 11:00-13:00 en la misma sala",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 5, \"roomId\": 2, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(21, 11, 0)));",
+                  "pm.variables.set('end', iso(at(21, 13, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = RN-01', () => pm.expect(b.codigo).to.eql('RN-01'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 03 - Reservas contiguas no se cruzan",
+      "item": [
+        {
+          "name": "3a. Reserva 09:00-10:00 (sala 3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 3, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(22, 9, 0)));",
+                  "pm.variables.set('end', iso(at(22, 10, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3b. Reserva 10:00-11:00 en la misma sala",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 3, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(22, 10, 0)));",
+                  "pm.variables.set('end', iso(at(22, 11, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+                  "pm.test('termina una y empieza la otra: no se cruzan', () => pm.expect(b.status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 04 - Duración inválida y fuera de horario (RN-02, RN-03)",
+      "item": [
+        {
+          "name": "4a. Reserva de 45 minutos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 1, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(23, 10, 0)));",
+                  "pm.variables.set('end', iso(at(23, 10, 45)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = RN-02', () => pm.expect(b.codigo).to.eql('RN-02'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4b. Reserva 06:00-07:00 en una sede que abre a las 08:00",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 1, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(23, 6, 0)));",
+                  "pm.variables.set('end', iso(at(23, 7, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = RN-03', () => pm.expect(b.codigo).to.eql('RN-03'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 05 - Cancelar con más de 24 h: sin cargo (RN-08)",
+      "item": [
+        {
+          "name": "5a. Crear la reserva (a 3 días)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 4, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.variables.set('start', iso(at(3, 10, 0)));",
+                  "pm.variables.set('end', iso(at(3, 11, 0)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+                  "pm.collectionVariables.set('booking5', b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5b. Cancelar la reserva",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{booking5}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{booking5}}",
+                "cancelar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('La cancelación responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('la reserva queda CANCELLED', () => pm.expect(b.status).to.eql('CANCELLED'));",
+                  "pm.test('el cargo de cancelación es 0', () => pm.expect(b.cancellationFee).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 06 - Cancelar entre 2 y 24 h: cargo del 50 % (RN-08)",
+      "item": [
+        {
+          "name": "6a. Crear la reserva (a unas 3-20 horas, a nombre de Carlos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 2, \"roomId\": 4, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "const now = new Date();",
+                  "let chosen = null;",
+                  "for (let dayOffset = 0; dayOffset <= 1 && !chosen; dayOffset++) {",
+                  "  for (let hour = 7; hour <= 20 && !chosen; hour++) {",
+                  "    const start = at(dayOffset, hour, 0);",
+                  "    const hoursAhead = (start - now) / 3600000;",
+                  "    if (hoursAhead >= 3 && hoursAhead <= 20) { chosen = start; }",
+                  "  }",
+                  "}",
+                  "pm.collectionVariables.set('skip6', chosen ? 'false' : 'true');",
+                  "if (!chosen) { console.warn('Escenario 06: no hay un horario entre 3 y 20 horas dentro del horario de la sede; se usa una fecha lejana.'); }",
+                  "const start = chosen || at(25, 10, 0);",
+                  "pm.variables.set('start', iso(start));",
+                  "pm.variables.set('end', iso(new Date(start.getTime() + 3600000)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+                  "pm.collectionVariables.set('booking6', b.id);",
+                  "pm.collectionVariables.set('roomCost6', b.roomCost);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6b. Cancelar la reserva",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{booking6}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{booking6}}",
+                "cancelar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('La cancelación responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('la reserva queda CANCELLED', () => pm.expect(b.status).to.eql('CANCELLED'));",
+                  "const roomCost = Number(pm.collectionVariables.get('roomCost6'));",
+                  "if (pm.collectionVariables.get('skip6') === 'true') {",
+                  "  pm.test('OMITIDO: no hubo un horario dentro de la ventana de 2 a 24 horas', () => {});",
+                  "} else if (!(roomCost > 0)) {",
+                  "  pm.test('OMITIDO: el costo de la sala es 0, no se puede comprobar el 50 %', () => {});",
+                  "} else {",
+                  "  pm.test('el cargo es el 50 % del costo de la sala', () => pm.expect(b.cancellationFee).to.be.closeTo(roomCost * 0.5, 0.01));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Depende de la hora a la que se ejecute: busca una reserva que empiece entre 3 y 20 horas desde ahora, dentro del horario de la Sede Norte (07:00 a 22:00)."
+    },
+    {
+      "name": "Escenario 07 - Cancelar con menos de 2 h: no se permite (RN-08)",
+      "item": [
+        {
+          "name": "7a. Crear la reserva (a ~1 h 30 min)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"memberId\": 3, \"roomId\": 5, \"startTime\": \"{{start}}\", \"endTime\": \"{{end}}\", \"attendees\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "const now = new Date();",
+                  "let chosen = null;",
+                  "for (let dayOffset = 0; dayOffset <= 1 && !chosen; dayOffset++) {",
+                  "  for (let hour = 7; hour <= 20; hour++) {",
+                  "    for (const minute of [0, 30]) {",
+                  "      const start = at(dayOffset, hour, minute);",
+                  "      const minutesAhead = (start - now) / 60000;",
+                  "      if (!chosen && minutesAhead >= 70 && minutesAhead <= 110) { chosen = start; }",
+                  "    }",
+                  "  }",
+                  "}",
+                  "pm.collectionVariables.set('skip7', chosen ? 'false' : 'true');",
+                  "if (!chosen) { console.warn('Escenario 07: no hay un horario a 70-110 minutos dentro del horario de la sede; se usa una fecha lejana.'); }",
+                  "const start = chosen || at(25, 12, 0);",
+                  "pm.variables.set('start', iso(start));",
+                  "pm.variables.set('end', iso(new Date(start.getTime() + 3600000)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('la reserva queda PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+                  "pm.collectionVariables.set('booking7', b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7b. Intentar cancelarla",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{booking7}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{booking7}}",
+                "cancelar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('skip7') === 'true') {",
+                  "  pm.test('OMITIDO: no hubo un horario a 70-110 minutos dentro del horario de la sede', () => {});",
+                  "} else {",
+                  "  const b = pm.response.json();",
+                  "  pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "  pm.test('codigo = RN-08', () => pm.expect(b.codigo).to.eql('RN-08'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Depende de la hora: necesita un horario a 70-110 minutos de ahora que caiga dentro del horario de la Sede Norte (aprox. entre 05:50 y 19:50)."
+    },
+    {
+      "name": "Escenario 08 - Confirmar una reserva cancelada (RN-09)",
+      "item": [
+        {
+          "name": "Confirmar la reserva #6 (ya cancelada en el import.sql)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/6/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "6",
+                "confirmar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = RN-09', () => pm.expect(b.codigo).to.eql('RN-09'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 09 - Un miembro consulta la reserva de otro",
+      "item": [
+        {
+          "name": "9a. Carlos consulta la reserva #9 (es de Ana)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "9"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{carlosToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('codigo = FORBIDDEN', () => pm.expect(b.codigo).to.eql('FORBIDDEN'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9b. Ana consulta su propia reserva #9",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "9"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{anaToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('la reserva es del miembro 1 (Ana)', () => pm.expect(b.memberId).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 10 - Sin token o con token alterado",
+      "item": [
+        {
+          "name": "10a. Consultar sedes sin token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sedes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sedes"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = UNAUTHORIZED', () => pm.expect(b.codigo).to.eql('UNAUTHORIZED'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10b. Consultar sedes con un token alterado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sedes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sedes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{badToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.collectionVariables.get('adminToken') || 'sin-token';",
+                  "pm.variables.set('badToken', token.slice(0, -3) + (token.endsWith('AAA') ? 'BBB' : 'AAA'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('codigo = UNAUTHORIZED', () => pm.expect(b.codigo).to.eql('UNAUTHORIZED'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 11 - Eliminar una sala con reservas (RN-12)",
+      "item": [
+        {
+          "name": "Eliminar la sala 1 (tiene reservas)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/salas/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "salas",
+                "1"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('codigo = RN-12', () => pm.expect(b.codigo).to.eql('RN-12'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 12 - Crear una sede sin nombre",
+      "item": [
+        {
+          "name": "Crear una sede con el nombre vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sedes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sedes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"\", \"city\": \"Cali\", \"address\": \"Calle 1 # 2-3\", \"openingTime\": \"08:00:00\", \"closingTime\": \"20:00:00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('codigo = VALIDATION_ERROR', () => pm.expect(b.codigo).to.eql('VALIDATION_ERROR'));",
+                  "pm.test('el cuerpo de error trae mensaje y timestamp', () => { pm.expect(b.error).to.be.a('string'); pm.expect(b.timestamp).to.be.a('string'); });",
+                  "pm.test('el mensaje indica el campo name', () => pm.expect(b.error).to.include('name'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escenario 13 - Dos solicitudes simultáneas para la misma sala y horario",
+      "item": [
+        {
+          "name": "Disparar las dos solicitudes a la vez (Laura y Sofía, sala 5)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';",
+                  "const at = (days, hour, minute) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, minute || 0, 0, 0); return d; };",
+                  "pm.test('El servicio responde 200 antes de la prueba', () => pm.response.to.have.status(200));",
+                  "const baseUrl = pm.environment.get('baseUrl');",
+                  "const token = pm.collectionVariables.get('recepToken');",
+                  "const start = iso(at(26, 10, 0));",
+                  "const end = iso(at(26, 11, 0));",
+                  "const results = [];",
+                  "const send = (memberId) => pm.sendRequest({",
+                  "  url: baseUrl + '/api/reservas',",
+                  "  method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },",
+                  "  body: { mode: 'raw', raw: JSON.stringify({ memberId: memberId, roomId: 5, startTime: start, endTime: end, attendees: 2 }) }",
+                  "}, (err, res) => {",
+                  "  let codigo = null;",
+                  "  try { codigo = res.json().codigo; } catch (e) { codigo = null; }",
+                  "  results.push({ status: err ? 0 : res.code, codigo: codigo });",
+                  "  if (results.length === 2) {",
+                  "    const statuses = results.map(r => r.status).sort();",
+                  "    pm.test('una de las dos solicitudes simultáneas responde 201', () => pm.expect(statuses).to.include(201));",
+                  "    pm.test('la otra responde 409', () => pm.expect(statuses).to.include(409));",
+                  "    pm.test('el 409 es por RN-01', () => pm.expect(results.filter(r => r.status === 409)[0].codigo).to.eql('RN-01'));",
+                  "  }",
+                  "});",
+                  "send(3);",
+                  "send(5);"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Un script lanza dos POST en el mismo instante (a nombre de Laura y de Sofía, a través de recepción) y comprueba que gane una y la otra reciba 409."
+    },
+    {
+      "name": "Escenario 14 - Listar miembros suspendidos",
+      "item": [
+        {
+          "name": "Listar miembros con estado SUSPENDED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/miembros?estado=SUSPENDED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "miembros"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "SUSPENDED"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{recepToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('todos los miembros listados están SUSPENDED', () => { pm.expect(b.content.length).to.be.above(0); b.content.forEach(m => pm.expect(m.status).to.eql('SUSPENDED')); });",
+                  "pm.test('aparece Diego Torres', () => pm.expect(b.content.map(m => m.fullName)).to.include('Diego Torres'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Extra - Salud del servicio (RF-15)",
+      "item": [
+        {
+          "name": "GET /actuator/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status = UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

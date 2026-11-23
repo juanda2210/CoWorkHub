@@ -48,10 +48,10 @@ INSERT INTO members (id, document_number, full_name, email, status, membership_p
 INSERT INTO members (id, document_number, full_name, email, status, membership_plan_id, created_at, updated_at) VALUES (5, '1054321098', 'Sofía Marín', 'sofia.marin@coworkhub.com', 'ACTIVE', 2, NOW(), NOW());
 
 -- USUARIOS (password con BCrypt; admin y recep no son miembros; Laura, Diego y Sofía no tienen cuenta)
-INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (1, 'admin', '$2a$10$XU5UxIZNtgA/mIw/HplBBeOJDhYAAdQgMhNWPXLkepi/LVmcV68iy', 'ADMIN', NULL, NOW(), NOW());
-INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (2, 'recep', '$2a$10$tXog/uU50LRB5C2tESwiueM/zm279rkgd09Jubvje41rOh7w.lBCm', 'RECEPTIONIST', NULL, NOW(), NOW());
-INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (3, 'ana', '$2a$10$0.8kvt5PO/C90ZgXungGwesXZ6e5tP9Qioqr9HvJ/U2qsiOnec/dy', 'MEMBER', 1, NOW(), NOW());
-INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (4, 'carlos', '$2a$10$bTUdxs1NFmOIzPRhCCpqY.FfCZyZseW3D9y2eiGBDh498MY0BsICe', 'MEMBER', 2, NOW(), NOW());
+INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (1, 'admin', '$2a$10$UO4JoNf5by55qWoA3SXpx.GRYMoKZjBWm89WUEA58I7nUvJz.U5UC', 'ADMIN', NULL, NOW(), NOW());
+INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (2, 'recep', '$2a$10$/AXx8oj7Nbd011yn7YUB8O63VteXML6LBDyNd87vBEcJ54jVk6atW', 'RECEPTIONIST', NULL, NOW(), NOW());
+INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (3, 'ana', '$2a$10$AXtltnKrhlVcE/kkPlO/0O45LzgNvCnRKLe1ewRxdFXdNB4I6qpS6', 'MEMBER', 1, NOW(), NOW());
+INSERT INTO user_accounts (id, username, password, role, member_id, created_at, updated_at) VALUES (4, 'carlos', '$2a$10$oOJGRXKYu018QCVjNjyJrusKY07lzSgfvEtIqjgX8B4fqhstDKBSC', 'MEMBER', 2, NOW(), NOW());
 
 -- RESERVAS COMPLETADAS (pasadas)
 INSERT INTO bookings (id, start_time, end_time, attendees, status, room_cost, services_cost, total_cost, cancellation_fee, member_id, room_id, created_at, updated_at) VALUES (1, TIMESTAMP(CURDATE() - INTERVAL 10 DAY, '09:00:00'), TIMESTAMP(CURDATE() - INTERVAL 10 DAY, '11:00:00'), 6, 'COMPLETED', 0.00, 12000.00, 12000.00, NULL, 1, 1, NOW(), NOW());

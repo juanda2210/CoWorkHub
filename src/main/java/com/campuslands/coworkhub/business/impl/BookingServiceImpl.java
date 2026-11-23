@@ -45,6 +45,13 @@ public class BookingServiceImpl implements BookingService {
     public BookingEntity create(Long memberId, Long roomId,
                                 LocalDateTime startTime, LocalDateTime endTime,
                                 int attendees, Map<Long, Integer> services) {
+        // El candado de la sala debe ser lo PRIMERO que se hace en la transacción. MySQL toma la
+        // "foto" de lectura en la primera consulta normal; si se toma antes de esperar el candado,
+        // la validación de cruces (RN-01) no vería las reservas de la otra solicitud simultánea.
+        RoomEntity room = rooms.findWithLockById(roomId)
+                .orElseThrow(() -> new NotFoundException(
+                        "La sala con id " + roomId + " no existe"));
+
         MemberEntity member = members.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(
                         "El miembro con id " + memberId + " no existe"));
@@ -66,10 +73,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ConflictException("RN-03",
                     "La reserva debe ser futura y hacerse con al menos 1 hora de anticipación");
         }
-
-        RoomEntity room = rooms.findWithLockById(roomId)
-                .orElseThrow(() -> new NotFoundException(
-                        "La sala con id " + roomId + " no existe"));
 
         if (!room.isActive()) {
             throw new ConflictException("RN-04", "La sala no está activa");
